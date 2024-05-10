@@ -1,61 +1,44 @@
-from fastapi import FastAPI, HTTPException
-from supabase import create_client, Client
 from connectDB import get_supabase
-import random
-import time
+from fastapi import FastAPI, HTTPException
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
 
-app = FastAPI()
-# Supabase 설정
 supabase = get_supabase()
+app = FastAPI()
 
-
-async def select_Tag():
-    random.seed(time.time())
-    
+@app.post("/insert-tag/")
+async def insert_tag(request: Request):
     try:
-        # 모든 영화와 링크 정보를 한 번에 로드
-        movies_data = supabase.table("movies").select("title, movieId, genres").execute().data
-        if not movies_data:
-            raise HTTPException(status_code=404, detail="No movies data found")
+        #data = 사용자가 영화 링크 접속했을 때 title 값 
+        data = await request.json()
+        user_id = data.get("UserId")
+        movie_genres = supabase.table("movies").select("genres").eq("title", data).execute().data
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required.")
 
-        links_data = supabase.table("links").select("movieId, imdbId, tmdbId").execute().data
-        if not links_data:
-            raise HTTPException(status_code=404, detail="No links data found")
+        if not movie_genres:
+            raise HTTPException(status_code=400, detail="Movie genres are required.")
 
-        # movieId를 키로 하여 imdbId와 tmdbId를 빠르게 찾을 수 있는 사전 생성
-        links_dict = {item['movieId']: {'imdbId': item['imdbId'], 'tmdbId': item['tmdbId']}
-                      for item in links_data if 'imdbId' in item and 'tmdbId' in item}
+        for genre in movie_genres:
+            # 이미 같은 사용자 ID와 영화 장르가 있는지 확인
+            existing_data = supabase.table("Users").select("*").eq("UserId", user_id).eq("UserTags", genre).execute()
 
-        # 장르 리스트 생성
-        genres_list = set()
-        for movie in movies_data:
-            if movie['genres']:
-                genres_list.update(movie['genres'].split('|'))
-        if not genres_list:
-            raise HTTPException(status_code=404, detail="No genres found")
+            if existing_data.data:
+                # 이미 같은 사용자 ID와 영화 장르가 있으면 UserStack 증가
+                user_stack = existing_data.data[0]["UserStack"] + 1
 
-        # 무작위 장르 선택
-        random_genres = random.sample(list(genres_list), k=min(10, len(genres_list)))
+                # Users 테이블 업데이트
+                update_response = supabase.table("Users").update({"UserStack": user_stack}).eq("UserId", user_id).eq("UserTags", genre).execute()
 
-        # 선택된 장르에 해당하는 영화 타이틀과 imdbId 및 tmdbId 검색
-        movies = {}
-        for genre in random_genres:
-            # 장르에 해당하는 모든 영화 리스트
-            filtered_movies = [movie for movie in movies_data if genre in movie.get('genres', '') and movie['movieId'] in links_dict]
-            if not filtered_movies:
-                continue  # 해당 장르의 영화가 없는 경우 스킵
+            else:
+                # 같은 사용자 ID와 영화 장르가 없으면 새로운 데이터 삽입
+                insert_response = supabase.table("Users").insert({
+                    "UserId": user_id,
+                    "UserTags": genre,
+                    "UserStack": 1
+                }).execute()
 
-            # 랜덤으로 영화 선택
-            selected_movies = random.sample(filtered_movies, min(len(filtered_movies), 10))
+        return {"message": "Tags inserted successfully!"}
 
-            # 선택된 영화 정보 구성
-            genre_movies = [{"title": movie['title'], "imdbId": links_dict[movie['movieId']]['imdbId'],
-                             "tmdbId": links_dict[movie['movieId']]['tmdbId'],
-                             "imdbLink": f"https://www.imdb.com/title/tt0{links_dict[movie['movieId']]['imdbId']}",
-                             "PosterLink": f"http://127.0.0.1:8000/get-movie-poster/{links_dict[movie['movieId']]['tmdbId']}"} 
-                            for movie in selected_movies]
-            movies[genre] = {"genre": genre, "movies": genre_movies}
-
-        return movies
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

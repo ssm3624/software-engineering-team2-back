@@ -12,9 +12,11 @@ IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"  # w500은 이미지 크기�
 async def get_movie_poster(tmdb_id: str):
     response = requests.get(f"{BASE_URL}/{tmdb_id}", params={"api_key": API_KEY})
     data = response.json()
-    poster_path = data.get('poster_path', None)
+    poster_path = data.get("backdrop_path", None)
+
     if poster_path:
         poster_url = f"{IMAGE_BASE_URL}{poster_path}"
         return {poster_url}
     else:
+        
         return {"error": "Poster not found"}
