@@ -21,11 +21,11 @@ def recommend_movies():
     
         try:
             # 모든 영화와 링크 정보를 한 번에 로드
-            movies_data = supabase.table("movies").select("title, movieId, genres").execute().data
+            movies_data = supabase.table("Movies Table").select("title, movieId, genres").execute().data
             if not movies_data:
                 raise HTTPException(status_code=404, detail="No movies data found")
 
-            links_data = supabase.table("links").select("movieId, imdbId, tmdbId").execute().data
+            links_data = supabase.table("Links Table").select("movieId, imdbId, tmdbId").execute().data
             if not links_data:
                 raise HTTPException(status_code=404, detail="No links data found")
 
@@ -56,8 +56,7 @@ def recommend_movies():
                 selected_movies = random.sample(filtered_movies, min(len(filtered_movies), 10))
 
                 # 선택된 영화 정보 구성
-                genre_movies = [{"title": movie['title'], "imdbId": links_dict[movie['movieId']]['imdbId'],
-                                "tmdbId": links_dict[movie['movieId']]['tmdbId'],
+                genre_movies = [{"title": movie['title'],
                                 "imdbLink": f"https://www.imdb.com/title/tt0{links_dict[movie['movieId']]['imdbId']}",
                                 "PosterLink": f"http://127.0.0.1:8000/get-movie-poster/{links_dict[movie['movieId']]['tmdbId']}"} 
                                 for movie in selected_movies]
@@ -70,7 +69,7 @@ def recommend_movies():
             #-----------------------------태그를 이용한 영화 추천-------------------------------
 
             # 유저의 태그들을 가져옴
-            user_data = supabase.table("Users").select("UserId, UserTags").eq("UserId", TEST_USER_ID).execute()
+            user_data = supabase.table("Users Table").select("UserId, UserTags").eq("UserId", TEST_USER_ID).execute()
             
             # 유저 태그 데이터가 없거나 태그가 비어 있는 경우
             if not user_data.data or not user_data.data[0]['UserTags']:
@@ -79,20 +78,20 @@ def recommend_movies():
                 random_tags = random.sample(possible_tags, 2)  # 랜덤으로 2개 태그 추출
 
                 # Users 테이블에 태그 정보 삽입
-                update_response = supabase.table("Users").insert({
+                update_response = supabase.table("Users Table").insert({
                     "UserId" : TEST_USER_ID,
                     "UserStack": '1',
                     "UserTags": random_tags[0]
                 }).execute()
 
-                update_response = supabase.table("Users").insert({
+                update_response = supabase.table("Users Table").insert({
                     "UserId" : TEST_USER_ID,
                     "UserStack": '1',
                     "UserTags": random_tags[1]
                 }).execute()
 
                 # 업데이트된 데이터 다시 가져오기
-                user_data = supabase.table("Users").select("UserId, UserTags").eq("UserId", TEST_USER_ID).execute()
+                user_data = supabase.table("Users Table").select("UserId, UserTags").eq("UserId", TEST_USER_ID).execute()
 
             #가져온 태그들을 한줄로 저장
             user_tags_agg = defaultdict(str)
@@ -120,7 +119,7 @@ def recommend_movies():
             movie_R = {}
             #무작위 영화100개의 Tag들을 가져옴.
             for movie1 in movie_ids:
-                tags_data = supabase.table("Tags").select("tag").eq("movieId", movie1).execute()
+                tags_data = supabase.table("Tags Table").select("tag").eq("movieId", movie1).execute()
                 if tags_data.data:
                     movie_tags_string = ' '.join(row['tag'] for row in tags_data.data)
                     movie_tfidf = vectorizer.transform([movie_tags_string])
@@ -131,11 +130,11 @@ def recommend_movies():
 
                     #유사도 0인 관련 없는 영화들 제외
                     if (similarity_score != 0 ):
-                        movies_data = supabase.table("movies").select("title").eq("movieId", movie1).execute()
+                        movies_data = supabase.table("Movies Table").select("title").eq("movieId", movie1).execute()
                         if not movies_data:
                             raise HTTPException(status_code=404, detail="No movies data found")
 
-                        links_data = supabase.table("links").select("imdbId, tmdbId").eq("movieId", movie1).execute()
+                        links_data = supabase.table("Links Table").select("imdbId, tmdbId").eq("movieId", movie1).execute()
                         if not links_data:
                             raise HTTPException(status_code=404, detail="No links data found")
                         
