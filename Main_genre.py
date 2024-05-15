@@ -91,7 +91,7 @@ async def recommend_movies(genre: str):
                 movie_tags_string = ' '.join(row['tag'] for row in tags_data)
                 movie_tfidf = vectorizer.transform([movie_tags_string])
                 similarity_score = cosine_similarity(user_tfidf, movie_tfidf)[0][0]
-
+                
                 movie_title = movie['title']
                 tmdb_id = links_dict[movie_id]['tmdbId']
 

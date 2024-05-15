@@ -1,5 +1,9 @@
 from supabase import create_client, Client
 from starlette.config import Config
+from fastapi import APIRouter
+
+
+router = APIRouter()
 
 def get_supabase():
 
