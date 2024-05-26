@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from connectDB import get_supabase
 from fastapi import APIRouter
 from Main_genre import to_router
 from genre import router

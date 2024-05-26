@@ -1,4 +1,4 @@
-from collections import defaultdict
+'''from collections import defaultdict
 from fastapi import FastAPI, HTTPException, APIRouter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -8,11 +8,16 @@ from Post import get_movie_poster
 import random
 import time
 
+
+from preprocess import get_genre
+from Pre_Movie import get_movie
+from Pre_UserID import get_userid
+
 app = FastAPI()
 to_router = APIRouter()
 supabase = get_supabase()
 
-TEST_USER_ID = "TestID"  # 테스트용 유저 아이디
+TEST_USER_ID = get_userid()
 
 def fetch_movies():
     return supabase.table("Movies_Table").select("title, movieId, genres").execute().data
@@ -91,7 +96,7 @@ async def recommend_movies(genre: str):
                 movie_tags_string = ' '.join(row['tag'] for row in tags_data)
                 movie_tfidf = vectorizer.transform([movie_tags_string])
                 similarity_score = cosine_similarity(user_tfidf, movie_tfidf)[0][0]
-
+                
                 movie_title = movie['title']
                 tmdb_id = links_dict[movie_id]['tmdbId']
 
@@ -119,4 +124,4 @@ async def recommend_movies(genre: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-app.include_router(to_router)
+app.include_router(to_router)'''

@@ -1,4 +1,4 @@
-from connectDB import get_supabase
+'''from connectDB import get_supabase
 from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
@@ -9,7 +9,7 @@ app = FastAPI()
 @app.post("/insert-tag/")
 async def insert_tag(request: Request):
     try:
-        #data = 사용자가 영화 링크 접속했을 때 title 값 
+        #data = 사용자가 영화 링크 접속했을 때 title 값
         data = await request.json()
         user_id = data.get("UserId")
         movie_genres = supabase.table("Movies_Table").select("genres").eq("title", data).execute().data
@@ -41,4 +41,4 @@ async def insert_tag(request: Request):
         return {"message": "Tags inserted successfully!"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))'''

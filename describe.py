@@ -1,4 +1,4 @@
-import requests
+'''import requests
 from fastapi import FastAPI
 from starlette.config import Config
 
@@ -19,4 +19,4 @@ def get_movie_overview(tmdb_id: str):
         return overview_path
     else:
         
-        return {"error": "Poster not found"}
+        return {"error": "Poster not found"}'''

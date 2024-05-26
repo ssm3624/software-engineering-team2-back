@@ -12,4 +12,4 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # 앱을 실행합니다.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${PORT}"]
